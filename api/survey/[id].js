@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
   const { id } = req.query;
@@ -15,10 +15,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const sql = neon(process.env.DATABASE_URL);
+
   try {
-    const { rows } = await sql`
-      SELECT * FROM surveys WHERE id = ${id}
-    `;
+    const rows = await sql`SELECT * FROM surveys WHERE id = ${id}`;
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Survey not found' });
