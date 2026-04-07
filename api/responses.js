@@ -1,5 +1,4 @@
-import { sql } from '@vercel/postgres';
-import { nanoid } from 'nanoid';
+import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,6 +13,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const sql = neon(process.env.DATABASE_URL);
+
   try {
     const { surveyId, responses, submittedAt } = req.body;
 
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Survey ID and responses are required' });
     }
 
+    const { nanoid } = await import('nanoid');
     const id = nanoid(10);
     
     await sql`
