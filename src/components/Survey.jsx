@@ -11,6 +11,14 @@ export default function Survey() {
 
   const questions = [
     {
+      id: 'email',
+      title: 'Email Address',
+      question: 'Please enter your email address',
+      type: 'email',
+      required: true,
+      domains: ['@applaudo.com', '@techsolutions-sv.com']
+    },
+    {
       id: 'satisfaction',
       title: 'Overall Satisfaction',
       question: 'How satisfied are you with the branding services provided by the team?',
@@ -62,7 +70,6 @@ export default function Survey() {
   ];
 
   useEffect(() => {
-    // Fetch survey info
     fetch(`/api/survey/${surveyId}`)
       .then(res => res.json())
       .then(data => {
@@ -97,12 +104,17 @@ export default function Survey() {
 
   const handleSubmit = async () => {
     try {
+      const finalAnswers = { ...answers };
+      if (finalAnswers.email) {
+        finalAnswers.email = `${finalAnswers.email.username}${finalAnswers.email.domain}`;
+      }
+      
       await fetch('/api/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           surveyId,
-          responses: answers,
+          responses: finalAnswers,
           submittedAt: new Date().toISOString()
         })
       });
@@ -142,7 +154,9 @@ export default function Survey() {
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const currentQ = questions[currentQuestion];
   const currentAnswer = answers[currentQ.id];
-  const canProceed = currentAnswer !== undefined || !currentQ.required;
+  const canProceed = currentQ.type === 'email' 
+    ? (currentAnswer?.username && currentAnswer?.username.trim() !== '')
+    : (currentAnswer !== undefined || !currentQ.required);
 
   if (submitted) {
     return (
@@ -156,7 +170,6 @@ export default function Survey() {
           maxWidth: '800px',
           margin: '0 auto'
         }}>
-          {/* Header with logo */}
           <div style={{
             background: '#FFFFFF',
             padding: '24px',
@@ -178,7 +191,6 @@ export default function Survey() {
             </svg>
           </div>
 
-          {/* Success message */}
           <div style={{
             background: '#FFFFFF',
             padding: '64px 48px',
@@ -235,7 +247,6 @@ export default function Survey() {
         maxWidth: '800px',
         margin: '0 auto'
       }}>
-        {/* Header with logo */}
         <div style={{
           background: '#FFFFFF',
           padding: '24px',
@@ -257,7 +268,6 @@ export default function Survey() {
           </svg>
         </div>
 
-        {/* Title section */}
         <div style={{
           background: '#FFFFFF',
           padding: '48px',
@@ -284,7 +294,6 @@ export default function Survey() {
           </p>
         </div>
 
-        {/* Progress bar */}
         <div style={{
           background: '#FFFFFF',
           padding: '24px',
@@ -322,7 +331,6 @@ export default function Survey() {
           </div>
         </div>
 
-        {/* Question card */}
         <div style={{
           background: '#FFFFFF',
           padding: '48px',
@@ -353,7 +361,86 @@ export default function Survey() {
             {currentQ.question}
           </h2>
 
-          {currentQ.type === 'text' ? (
+          {currentQ.type === 'email' ? (
+            <div>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  value={currentAnswer?.username || ''}
+                  onChange={(e) => {
+                    setAnswers({ 
+                      ...answers, 
+                      [currentQ.id]: { 
+                        username: e.target.value, 
+                        domain: currentAnswer?.domain || '@applaudo.com' 
+                      } 
+                    });
+                  }}
+                  placeholder="your.name"
+                  style={{
+                    flex: 1,
+                    padding: '16px',
+                    fontSize: '16px',
+                    fontFamily: "'Avenir Next LT Pro', Arial, sans-serif",
+                    color: '#121212',
+                    background: '#F7F7F7',
+                    border: '2px solid #EBEBEB',
+                    borderRadius: '12px',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#FF4040';
+                    e.target.style.background = '#FFFFFF';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#EBEBEB';
+                    e.target.style.background = '#F7F7F7';
+                  }}
+                />
+                <select
+                  value={currentAnswer?.domain || '@applaudo.com'}
+                  onChange={(e) => {
+                    setAnswers({ 
+                      ...answers, 
+                      [currentQ.id]: { 
+                        username: currentAnswer?.username || '', 
+                        domain: e.target.value 
+                      } 
+                    });
+                  }}
+                  style={{
+                    padding: '16px',
+                    fontSize: '16px',
+                    fontFamily: "'Avenir Next LT Pro', Arial, sans-serif",
+                    color: '#121212',
+                    background: '#F7F7F7',
+                    border: '2px solid #EBEBEB',
+                    borderRadius: '12px',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#FF4040';
+                    e.target.style.background = '#FFFFFF';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#EBEBEB';
+                    e.target.style.background = '#F7F7F7';
+                  }}
+                >
+                  {currentQ.domains.map((domain) => (
+                    <option key={domain} value={domain}>{domain}</option>
+                  ))}
+                </select>
+              </div>
+              <p style={{ fontSize: '14px', color: '#6E6E6E', marginTop: '8px' }}>
+                <i className="ri-mail-line" style={{ marginRight: '6px' }}></i>
+                Full email: <strong>{currentAnswer?.username || 'your.name'}{currentAnswer?.domain || '@applaudo.com'}</strong>
+              </p>
+            </div>
+          ) : currentQ.type === 'text' ? (
             <div>
               <textarea
                 value={currentAnswer || ''}
@@ -384,7 +471,6 @@ export default function Survey() {
                 }}
               />
               
-              {/* Suggestion chips */}
               <div style={{
                 marginTop: '16px',
                 display: 'flex',
@@ -503,14 +589,12 @@ export default function Survey() {
                       }
                     }}
                   >
-                    {/* Color accent bar */}
                     <div style={{
                       width: '4px',
                       background: colors[colorIndex],
                       transition: 'all 0.3s ease'
                     }}></div>
                     
-                    {/* Content container */}
                     <div style={{
                       flex: 1,
                       padding: '14px 20px',
@@ -518,7 +602,6 @@ export default function Survey() {
                       alignItems: 'center',
                       gap: '16px'
                     }}>
-                      {/* Icon circle */}
                       <div style={{
                         width: '44px',
                         height: '44px',
@@ -539,7 +622,6 @@ export default function Survey() {
                         }}></i>
                       </div>
                       
-                      {/* Rating number badge */}
                       <div style={{
                         width: '32px',
                         height: '32px',
@@ -557,7 +639,6 @@ export default function Survey() {
                         {rating}
                       </div>
                       
-                      {/* Label text */}
                       <span style={{
                         fontSize: '16px',
                         fontWeight: isSelected ? '600' : '400',
@@ -569,7 +650,6 @@ export default function Survey() {
                         {currentQ.labels[rating - 1]}
                       </span>
                       
-                      {/* Checkmark */}
                       <div style={{
                         width: '28px',
                         height: '28px',
@@ -597,7 +677,6 @@ export default function Survey() {
           )}
         </div>
 
-        {/* Navigation */}
         <div style={{
           display: 'flex',
           gap: '16px',
@@ -706,7 +785,6 @@ export default function Survey() {
           )}
         </div>
 
-        {/* Footer note */}
         <div style={{
           textAlign: 'center',
           marginTop: '32px',
